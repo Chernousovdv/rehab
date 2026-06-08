@@ -170,6 +170,18 @@
   .settings input{background:var(--card2);border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:7px 9px;font-family:inherit;font-size:13px}
   .settings input:focus{outline:none;border-color:var(--c1)}
   .disc{font-size:11.5px;color:var(--muted2);line-height:1.6}
+  .meds{display:flex;flex-direction:column;gap:10px}
+  .med{display:flex;align-items:center;gap:11px;padding:9px 11px;border:1px solid var(--line);border-radius:12px;background:var(--card2);transition:border-color .2s,background .2s}
+  .med.done{border-color:rgba(52,211,153,.4);background:rgba(52,211,153,.07)}
+  .med-ic{font-size:18px;flex:none}
+  .med-n{flex:1;font-size:14px;font-weight:600;display:flex;flex-direction:column;line-height:1.2}
+  .med-sub{font-size:11px;color:var(--muted);font-weight:500;margin-top:3px}
+  .med.done .med-sub{color:#34d399}
+  .doses{display:flex;gap:7px;flex:none}
+  .dose{width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,255,255,.18);background:transparent;cursor:pointer;padding:0;transition:.15s;position:relative}
+  .dose:hover{border-color:var(--c1)}
+  .dose.on{background:linear-gradient(135deg,var(--c1),var(--c2));border-color:transparent;box-shadow:0 0 10px rgba(34,211,238,.45)}
+  .dose.on::after{content:"";position:absolute;left:8px;top:4px;width:6px;height:11px;border:solid #070a10;border-width:0 3px 3px 0;transform:rotate(45deg)}
   .hero-athlete{display:flex;align-items:flex-end;justify-content:center;align-self:stretch}
   .athlete{height:215px;width:auto;max-width:250px;opacity:.92;filter:drop-shadow(0 0 18px rgba(34,211,238,.3))}
   .athlete-cap{display:none}
@@ -215,6 +227,11 @@
     <div class="aside">
 
       
+
+      <div class="card pad">
+        <h3>💊 Таблетки сегодня</h3>
+        <div class="meds" id="meds"></div>
+      </div>
 
       <div class="card stage pad">
         <div class="big" style="margin: 4px">Этап 1 — упражнения у полки шкафа</div>
@@ -423,9 +440,33 @@ tl.addEventListener('click',e=>{
   }
 });
 
+/* ===== трекер таблеток ===== */
+const MEDS=[
+  {id:'calcium', icon:'🦴', name:'Кальций',    n:2},
+  {id:'osteo',   icon:'💊', name:'Остеогенон', n:2},
+  {id:'vitd',    icon:'☀️', name:'Витамин D',  n:1}
+];
+function renderMeds(){
+  const st=dayState(); let h='';
+  MEDS.forEach(m=>{
+    let dots='',taken=0;
+    for(let k=0;k<m.n;k++){ const id='pill_'+m.id+'_'+k; if(st[id])taken++;
+      dots+=`<button class="dose ${st[id]?'on':''}" data-pill="${id}" aria-label="доза ${k+1}"></button>`; }
+    const done=taken===m.n;
+    h+=`<div class="med ${done?'done':''}"><span class="med-ic">${m.icon}</span>`
+      +`<span class="med-n">${m.name}<span class="med-sub">${taken}/${m.n}${done?' ✓ принято':''}</span></span>`
+      +`<span class="doses">${dots}</span></div>`;
+  });
+  document.getElementById('meds').innerHTML=h;
+}
+document.getElementById('meds').addEventListener('click',e=>{
+  const b=e.target.closest('[data-pill]'); if(!b) return;
+  const st=dayState(); st[b.dataset.pill]=!st[b.dataset.pill]; save(); renderMeds();
+});
+
 document.getElementById('resetBtn').addEventListener('click',()=>{
   if(!confirm('Сбросить все отметки за сегодня?')) return;
-  store.dates[todayKey()]={}; save(); render(); refresh();
+  store.dates[todayKey()]={}; save(); render(); refresh(); renderMeds();
 });
 
 /* дата операции — фиксированная, только показываем */
@@ -436,7 +477,7 @@ document.getElementById('resetBtn').addEventListener('click',()=>{
 })();
 
 /* старт */
-render(); refresh();
+render(); refresh(); renderMeds();
 </script>
 </body>
 </html>
