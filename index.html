@@ -186,6 +186,18 @@
   .athlete{height:215px;width:auto;max-width:250px;opacity:.92;filter:drop-shadow(0 0 18px rgba(34,211,238,.3))}
   .athlete-cap{display:none}
   .footer{margin-top:24px;text-align:center;font-size:11.5px;color:var(--muted2)}
+
+  /* ===== POOL PACE CLOCK ===== */
+  .poolclock{display:flex;flex-direction:column;align-items:center;gap:12px;padding-top:2px}
+  .pc-face{width:100%;max-width:240px;height:auto;display:block;filter:drop-shadow(0 8px 22px rgba(0,0,0,.5))}
+  .pc-rim{fill:var(--card2);stroke:var(--line);stroke-width:1.5}
+  .pc-tick{stroke:var(--muted2)}
+  .pc-tick.maj{stroke:var(--muted)}
+  .pc-num{fill:var(--muted);font:600 13px 'Inter',system-ui,sans-serif;text-anchor:middle;dominant-baseline:central}
+  .pc-hub{fill:var(--txt)}
+  .pc-hub-in{fill:var(--bg)}
+  .pc-digital{font-variant-numeric:tabular-nums;font-weight:800;font-size:23px;letter-spacing:1px;color:var(--txt);line-height:1;text-align:center}
+  .pc-digital small{display:block;margin-top:6px;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted2)}
 </style>
 </head>
 <body>
@@ -227,6 +239,14 @@
     <div class="aside">
 
       
+
+      <div class="card pad">
+        <h3>🏊 Часы бассейна</h3>
+        <div class="poolclock">
+          <svg class="pc-face" id="pcFace" viewBox="0 0 200 200" role="img" aria-label="Часы с четырьмя секундными стрелками"></svg>
+          <div class="pc-digital"><span id="pcDigital">00:00:00</span><small>текущее время</small></div>
+        </div>
+      </div>
 
       <div class="card pad">
         <h3>💊 Таблетки сегодня</h3>
@@ -478,6 +498,69 @@ document.getElementById('resetBtn').addEventListener('click',()=>{
 
 /* старт */
 render(); refresh(); renderMeds();
+
+/* ===================== ЧАСЫ БАССЕЙНА · 4 секундные стрелки ===================== */
+(function(){
+  const SVG='http://www.w3.org/2000/svg';
+  const face=document.getElementById('pcFace');
+  if(!face) return;
+  const CX=100, CY=100;
+  const mk=(tag,attrs)=>{const e=document.createElementNS(SVG,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);return e;};
+
+  /* циферблат */
+  face.appendChild(mk('circle',{cx:CX,cy:CY,r:97,class:'pc-rim'}));
+
+  /* 60 делений, каждое 5-е — крупное */
+  for(let i=0;i<60;i++){
+    const a=i*6*Math.PI/180, sin=Math.sin(a), cos=Math.cos(a), maj=i%5===0;
+    const r1=maj?83:89, r2=96;
+    face.appendChild(mk('line',{
+      x1:CX+sin*r1, y1:CY-cos*r1, x2:CX+sin*r2, y2:CY-cos*r2,
+      class:'pc-tick'+(maj?' maj':''), 'stroke-width':maj?2.4:1, 'stroke-linecap':'round'
+    }));
+  }
+
+  /* цифры 5..60 по краю (как на бассейновых часах) */
+  for(let k=1;k<=12;k++){
+    const a=k*30*Math.PI/180, r=71;
+    const t=mk('text',{x:CX+Math.sin(a)*r, y:CY-Math.cos(a)*r, class:'pc-num'});
+    t.textContent=k*5;
+    face.appendChild(t);
+  }
+
+  /* 4 секундные стрелки под 90° друг к другу */
+  const HANDS=[{off:0,c:'#22d3ee'},{off:90,c:'#818cf8'},{off:180,c:'#34d399'},{off:270,c:'#fbbf24'}];
+  const hands=HANDS.map(h=>{
+    const g=mk('g',{});
+    g.appendChild(mk('line',{x1:CX,y1:CY+15,x2:CX,y2:CY-78,stroke:h.c,'stroke-width':3.2,'stroke-linecap':'round'}));
+    face.appendChild(g);
+    return {g,off:h.off};
+  });
+
+  /* втулка */
+  face.appendChild(mk('circle',{cx:CX,cy:CY,r:6,class:'pc-hub'}));
+  face.appendChild(mk('circle',{cx:CX,cy:CY,r:2.4,class:'pc-hub-in'}));
+
+  const digital=document.getElementById('pcDigital');
+  const p2=n=>String(n).padStart(2,'0');
+  let raf=0, lastSec=-1;
+
+  function tick(){
+    const now=new Date();
+    const base=(now.getSeconds()+now.getMilliseconds()/1000)*6; /* 6° в секунду — плавный ход */
+    for(const h of hands) h.g.setAttribute('transform','rotate('+(base+h.off)+' '+CX+' '+CY+')');
+    const s=now.getSeconds();
+    if(digital && s!==lastSec){ lastSec=s; digital.textContent=p2(now.getHours())+':'+p2(now.getMinutes())+':'+p2(s); }
+    raf=requestAnimationFrame(tick);
+  }
+  raf=requestAnimationFrame(tick);
+
+  /* пауза в фоновой вкладке */
+  document.addEventListener('visibilitychange',()=>{
+    cancelAnimationFrame(raf);
+    if(!document.hidden) raf=requestAnimationFrame(tick);
+  });
+})();
 </script>
 </body>
 </html>
