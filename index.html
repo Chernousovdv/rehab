@@ -247,7 +247,7 @@
         </div>
       </div>
 
-      <div class="card pad">
+      <div class="card pad" id="medsCard">
         <h3>💊 Таблетки сегодня</h3>
         <div class="meds" id="meds"></div>
       </div>
@@ -263,19 +263,7 @@
         <div class="ex" style="padding: 11px 10px 11px 0px"><div class="ex-t"><div class="ex-n" style="margin: 4px">Баня и сауна</div><div class="ex-d" style="margin: 4px">Тепловые процедуры тоже под запретом до 13 недель.</div></div></div>
       </div>
 
-      <div class="card pad">
-        <h3 style="padding: 3px">⛔ Пока нельзя</h3>
-        <ul class="rules">
-          <li><span class="ic">🏃</span><span><b>Спорт, бег, тряска, вибрация,</b> резкие движения оперированной рукой, падения — до 13 недель (~10 августа).</span></li>
-          <li><span class="ic">🧖</span><span><b>Баня, сауна</b> и другие тепловые процедуры — до 13 недель.</span></li>
-          <li><span class="ic">🏋️</span><span><b>Больше 1 кг</b> в оперированной руке — весь период реабилитации.</span></li>
-          <li><span class="ic">🛌</span><span><b>Сон на оперированном боку,</b> тем более на вытянутой вверх руке — весь период.</span></li>
-          <li><span class="ic">🚗</span><span><b>За рулём — «правило градусника»:</b> плечо приведено к туловищу, сустав вверх не поднимаем, амплитуда минимальная.</span></li>
-          <li><span class="ic">⚠️</span><span><b>Боль — стоп-сигнал.</b> Любые движения, провоцирующие боль, исключаем. Работаем до дискомфорта!</span></li>
-        </ul>
-      </div>
-
-      <div class="card pad" style="border-radius: 10px">
+<div class="card pad" style="border-radius: 10px">
         <h3 style="padding: 5px">⏱ Дата операции</h3>
         <div class="settings" style="padding: 3px">
           <span>Операция:</span>
@@ -296,13 +284,6 @@
           <li><span class="ic">😴</span><span><b>Сон 7–9 ч</b> — ночью ткани восстанавливаются.</span></li>
           <li><span class="ic">🧴</span><span><b>Дип Рилиф гель при боли</b> — 2–3 раза в день, в 2 слоя.</span></li>
           <li><span class="ic">🧲</span><span><b>Физиотерапия</b> — массаж в электростатическом поле, магнитотерапия: против боли и отёка.</span></li>
-        </ul>
-      </div>
-
-      <div class="card pad">
-        <h3 style="padding: 3px">📄 Документы</h3>
-        <ul class="rules">
-          <li><span class="ic">📎</span><span><a href="Реабилитация%208-9.pdf" target="_blank" rel="noopener" style="color:var(--c2)">Программа 8–9 недели (PDF)</a> — оригинал от врача.</span></li>
         </ul>
       </div>
 
@@ -547,6 +528,9 @@ document.getElementById('meds').addEventListener('click',e=>{
   const b=e.target.closest('[data-pill]'); if(!b) return;
   const st=dayState(); st[b.dataset.pill]=!st[b.dataset.pill]; save(); renderMeds();
 });
+/* курс таблеток — 2 месяца от операции, по 11 июля включительно; дальше карточку прячем */
+const MEDS_END='2026-07-11';
+if(todayKey()>MEDS_END){ const mc=document.getElementById('medsCard'); if(mc) mc.style.display='none'; }
 
 document.getElementById('resetBtn').addEventListener('click',()=>{
   if(!confirm('Сбросить все отметки за сегодня?')) return;
